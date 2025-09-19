@@ -7,11 +7,13 @@ import com.example.fintrack.exception.UserAlreadyExistException;
 import com.example.fintrack.exception.UserNotFoundException;
 import com.example.fintrack.model.User;
 import com.example.fintrack.repository.UserRepository;
+import com.example.fintrack.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -22,11 +24,16 @@ public class UserServiceImpl implements UserService {
     @Autowired
     BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
+    JwtUtil jwtUtil;
+
     @Override
     public SignUpResponseDto signUp(String name, String email, String password) throws UserAlreadyExistException {
-        User getUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserAlreadyExistException("User Already Exist with this email: "+email));
+        Optional<User> getUser = userRepository.findByEmail(email);
 
+        if(getUser.isPresent()){
+            throw new UserAlreadyExistException("User Already Exist with this email: "+email);
+        }
 
         User user = new User();
         user.setName(name);
@@ -55,10 +62,14 @@ public class UserServiceImpl implements UserService {
             throw new InvalidCredentialsException("Email or Password is incorrect");
         }
 
+        //Generate token
+        String token = jwtUtil.generateToken(getUser);
+
         // return a response DTO
         SignInResponseDto response = new SignInResponseDto();
         response.setUserId(getUser.getId());
         response.setMessage("SignIn successful");
+        response.setToken(token);
 
         return response;
     }

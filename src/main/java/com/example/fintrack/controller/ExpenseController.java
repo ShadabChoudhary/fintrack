@@ -42,8 +42,8 @@ public class ExpenseController {
         return new ResponseEntity<>(getAllExpenseResDto, HttpStatus.OK);
     }
 
-    @PutMapping("/{expenseId}")
-    public ResponseEntity<ExpenseResDto> updateExpense(@PathVariable Long expenseId, @RequestBody ExpenseReqDto expenseReqDto){
+    @PutMapping("/{id}")
+    public ResponseEntity<ExpenseResDto> updateExpense(@PathVariable("id") Long expenseId, @RequestBody ExpenseReqDto expenseReqDto){
         ExpenseResDto responseDto = expenseService.updateExpense(expenseId, expenseReqDto);
         return new ResponseEntity<>(responseDto, HttpStatus.OK);
     }

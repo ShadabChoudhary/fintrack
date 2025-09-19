@@ -9,4 +9,5 @@ import lombok.Setter;
 public class SignInResponseDto {
     private long userId;
     private String message;
+    private String token;
 }
