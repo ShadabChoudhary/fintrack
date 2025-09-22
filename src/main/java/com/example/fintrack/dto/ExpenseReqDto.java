@@ -13,5 +13,4 @@ public class ExpenseReqDto {
     private LocalDate date;
     private boolean isRecurring;
     private String category;
-    private Long userId; //for now, until JWT
 }

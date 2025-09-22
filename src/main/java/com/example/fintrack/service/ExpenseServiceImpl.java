@@ -30,9 +30,10 @@ public class ExpenseServiceImpl implements ExpenseService{
     ExpenseRepository expenseRepository;
 
     @Override
-    public ExpenseResDto createExpense(String description, double amount, LocalDate date, boolean isRecurring, String category, Long userId) throws UserNotFoundException {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not Found with this id"));
+    public ExpenseResDto createExpense(String description, double amount, LocalDate date,
+                                       boolean isRecurring, String category, String email) throws UserNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not Found with this email"));
 
         Category cat = categoryRepository.findByNameIgnoreCase(category)
                 .orElseGet(() -> {
@@ -60,8 +61,8 @@ public class ExpenseServiceImpl implements ExpenseService{
         return resDto;
     }
 
-    public List<GetAllExpenseResDto> getAllExpense(Long userId) {
-        List<Expense> expenses = expenseRepository.findAllByUserId(userId);
+    public List<GetAllExpenseResDto> getAllExpense(String email) {
+        List<Expense> expenses = expenseRepository.findAllByUserEmail(email);
 
         return expenses.stream()
                         .map(expense -> {
@@ -78,11 +79,11 @@ public class ExpenseServiceImpl implements ExpenseService{
     }
 
     @Override
-    public ExpenseResDto updateExpense(Long expenseId, ExpenseReqDto expenseReqDto) {
+    public ExpenseResDto updateExpense(Long expenseId, ExpenseReqDto expenseReqDto, String email) {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new ExpenseNotFoundException("No Expense found with this ID"));
 
-        User user = userRepository.findById(expenseReqDto.getUserId())
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with this ID"));
 
         Category cat = categoryRepository.findByNameIgnoreCase(expenseReqDto.getCategory())

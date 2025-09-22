@@ -10,8 +10,8 @@ import java.util.List;
 
 public interface ExpenseService {
     ExpenseResDto createExpense(String description, double amount, LocalDate date, boolean isRecurring,
-                                String category, Long userId) throws UserNotFoundException;
+                                String category, String email) throws UserNotFoundException;
 
-    List<GetAllExpenseResDto> getAllExpense(Long userId);
-    ExpenseResDto updateExpense(Long expenseId, ExpenseReqDto expenseReqDto);
+    List<GetAllExpenseResDto> getAllExpense(String email);
+    ExpenseResDto updateExpense(Long expenseId, ExpenseReqDto expenseReqDto, String email);
 }
