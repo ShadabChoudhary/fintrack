@@ -12,7 +12,12 @@ import com.example.fintrack.repository.CategoryRepository;
 import com.example.fintrack.repository.ExpenseRepository;
 import com.example.fintrack.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,7 +38,7 @@ public class ExpenseServiceImpl implements ExpenseService{
     public ExpenseResDto createExpense(String description, double amount, LocalDate date,
                                        boolean isRecurring, String category, String email) throws UserNotFoundException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not Found with this email"));
+                .orElseThrow(() -> new UserNotFoundException("User not Found with this email" + email));
 
         Category cat = categoryRepository.findByNameIgnoreCase(category)
                 .orElseGet(() -> {
@@ -61,10 +66,19 @@ public class ExpenseServiceImpl implements ExpenseService{
         return resDto;
     }
 
-    public List<GetAllExpenseResDto> getAllExpense(String email) {
-        List<Expense> expenses = expenseRepository.findAllByUserEmail(email);
+    public List<GetAllExpenseResDto> getAllExpense(int pageNumber, int pageSize, String sortBy, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with this email" + email));
 
-        return expenses.stream()
+        Pageable pageable = PageRequest.of(
+                Math.max(pageNumber, 0), //default page pageNumber
+                pageSize <= 0 ? 10 : pageSize, //default pageSize
+                Sort.by(sortBy).ascending()
+        );
+
+        Page<Expense> expensePage = expenseRepository.findByUser(user, pageable);
+
+        return expensePage.stream()
                         .map(expense -> {
                             GetAllExpenseResDto resDto = new GetAllExpenseResDto();
                             resDto.setExpenseId(expense.getId());

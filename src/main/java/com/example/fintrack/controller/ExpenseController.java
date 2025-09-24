@@ -39,9 +39,15 @@ public class ExpenseController {
     }
 
     @GetMapping("/user/all-expenses")
-    public ResponseEntity<List<GetAllExpenseResDto>> getAllExpense(Principal principal){
+    public ResponseEntity<List<GetAllExpenseResDto>> getAllExpense(
+            @RequestParam(defaultValue = "0") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "amount") String sortBy,
+            Principal principal){
+
         String email = principal.getName();
-        List<GetAllExpenseResDto> getAllExpenseResDto = expenseService.getAllExpense(email);
+        List<GetAllExpenseResDto> getAllExpenseResDto = expenseService.getAllExpense(pageNumber, pageSize,
+                                                        sortBy, email);
 
         return new ResponseEntity<>(getAllExpenseResDto, HttpStatus.OK);
     }

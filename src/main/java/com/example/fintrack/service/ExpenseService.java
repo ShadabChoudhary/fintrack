@@ -12,6 +12,6 @@ public interface ExpenseService {
     ExpenseResDto createExpense(String description, double amount, LocalDate date, boolean isRecurring,
                                 String category, String email) throws UserNotFoundException;
 
-    List<GetAllExpenseResDto> getAllExpense(String email);
+    List<GetAllExpenseResDto> getAllExpense(int pageNumber, int pageSize, String sortBy, String email);
     ExpenseResDto updateExpense(Long expenseId, ExpenseReqDto expenseReqDto, String email);
 }
