@@ -1,5 +1,6 @@
 package com.example.fintrack.service;
 
+import com.example.fintrack.dto.ExpenseDetailResDto;
 import com.example.fintrack.dto.ExpenseReqDto;
 import com.example.fintrack.dto.ExpenseResDto;
 import com.example.fintrack.dto.GetAllExpenseResDto;
@@ -17,8 +18,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 
+import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,9 +38,14 @@ public class ExpenseServiceImpl implements ExpenseService{
     @Autowired
     ExpenseRepository expenseRepository;
 
+    @Autowired
+    S3ServiceImpl s3Service;
+
     @Override
     public ExpenseResDto createExpense(String description, double amount, LocalDate date,
-                                       boolean isRecurring, String category, String email) throws UserNotFoundException {
+                                       boolean isRecurring, String category, String email,
+                                       MultipartFile receipt) throws UserNotFoundException, IOException {
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not Found with this email" + email));
 
@@ -56,6 +65,11 @@ public class ExpenseServiceImpl implements ExpenseService{
         expense.setCategory(cat);
         expense.setUser(user);
 
+        //get and upload the bill
+        if(receipt != null && !receipt.isEmpty()){
+            String key = s3Service.uploadFile(receipt, email);
+            expense.setReceiptKey(key);
+        }
         expenseRepository.save(expense);
 
         // response as dto
@@ -93,7 +107,7 @@ public class ExpenseServiceImpl implements ExpenseService{
     }
 
     @Override
-    public ExpenseResDto updateExpense(Long expenseId, ExpenseReqDto expenseReqDto, String email) {
+    public ExpenseDetailResDto updateExpense(Long expenseId, ExpenseReqDto expenseReqDto, String email) {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new ExpenseNotFoundException("No Expense found with this ID"));
 
@@ -118,7 +132,7 @@ public class ExpenseServiceImpl implements ExpenseService{
         Expense updateExpense = expenseRepository.save(expense);
 
         //Dto mapping
-        ExpenseResDto resDto = new ExpenseResDto();
+        ExpenseDetailResDto resDto = new ExpenseDetailResDto();
         resDto.setExpenseId(updateExpense.getId());
         resDto.setDescription(updateExpense.getDescription());
         resDto.setAmount(updateExpense.getAmount());
@@ -128,4 +142,27 @@ public class ExpenseServiceImpl implements ExpenseService{
 
         return resDto;
     }
+
+    @Override
+    public ExpenseDetailResDto getExpenseById(Long expenseId, String email) throws AccessDeniedException {
+        Expense getExpense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new ExpenseNotFoundException("Expense not found"));
+
+        // Ensuring the expense belongs to the authenticated user
+        if(!getExpense.getUser().getEmail().equals(email)){
+            throw new AccessDeniedException("Unauthorized to access this expense");
+        }
+
+        //dto mapping
+        ExpenseDetailResDto resDto = new ExpenseDetailResDto();
+        resDto.setExpenseId(getExpense.getId());
+        resDto.setDescription(getExpense.getDescription());
+        resDto.setAmount(getExpense.getAmount());
+        resDto.setCategoryName(getExpense.getCategory().getName());
+        resDto.setRecurring(getExpense.isRecurring());
+
+        return resDto;
+    }
+
+
 }

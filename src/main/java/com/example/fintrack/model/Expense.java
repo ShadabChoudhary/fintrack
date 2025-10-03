@@ -26,4 +26,6 @@ public class Expense extends BaseModel{
 
     @ManyToOne
     private User user;
+
+    private String receiptKey;
 }
