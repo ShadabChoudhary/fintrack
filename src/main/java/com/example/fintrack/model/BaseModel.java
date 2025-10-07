@@ -20,7 +20,7 @@ import java.util.Date;
 public class BaseModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long id;
+    private Long id;
 
     @CreatedDate
     @Temporal(TemporalType.DATE)

@@ -12,6 +12,7 @@ import com.example.fintrack.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +22,7 @@ import java.security.Principal;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private UserService userService;
+    private final UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
@@ -44,11 +45,11 @@ public class UserController {
     }
 
     @DeleteMapping("/me")
-    public ResponseEntity<String> delete() throws UserNotFoundException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) authentication.getPrincipal();
+    public ResponseEntity<String> delete(@AuthenticationPrincipal User user) throws UserNotFoundException {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        User user = (User) authentication.getPrincipal();
 
-        userService.deleteUser(user.getId());
+        userService.deleteUser(user);
         return ResponseEntity.ok("User deleted Successfully");
     }
 

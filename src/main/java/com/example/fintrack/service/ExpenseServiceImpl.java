@@ -39,15 +39,15 @@ public class ExpenseServiceImpl implements ExpenseService{
     ExpenseRepository expenseRepository;
 
     @Autowired
-    S3ServiceImpl s3Service;
+    FileStorageService fileStorageService;
 
     @Override
     public ExpenseResDto createExpense(String description, double amount, LocalDate date,
-                                       boolean isRecurring, String category, String email,
+                                       boolean isRecurring, String category, User user,
                                        MultipartFile receipt) throws UserNotFoundException, IOException {
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not Found with this email" + email));
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new UserNotFoundException("User not Found with this email" + email));
 
         Category cat = categoryRepository.findByNameIgnoreCase(category)
                 .orElseGet(() -> {
@@ -67,7 +67,7 @@ public class ExpenseServiceImpl implements ExpenseService{
 
         //get and upload the bill
         if(receipt != null && !receipt.isEmpty()){
-            String key = s3Service.uploadFile(receipt, email);
+            String key = fileStorageService.uploadFile(receipt, user.getEmail());
             expense.setReceiptKey(key);
         }
         expenseRepository.save(expense);
@@ -80,9 +80,9 @@ public class ExpenseServiceImpl implements ExpenseService{
         return resDto;
     }
 
-    public List<GetAllExpenseResDto> getAllExpense(int pageNumber, int pageSize, String sortBy, String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with this email" + email));
+    public List<GetAllExpenseResDto> getAllExpense(int pageNumber, int pageSize, String sortBy, User user) {
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new UserNotFoundException("User not found with this email" + email));
 
         Pageable pageable = PageRequest.of(
                 Math.max(pageNumber, 0), //default page pageNumber
@@ -107,12 +107,12 @@ public class ExpenseServiceImpl implements ExpenseService{
     }
 
     @Override
-    public ExpenseDetailResDto updateExpense(Long expenseId, ExpenseReqDto expenseReqDto, String email) {
+    public ExpenseDetailResDto updateExpense(Long expenseId, ExpenseReqDto expenseReqDto, User user) {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new ExpenseNotFoundException("No Expense found with this ID"));
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with this ID"));
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new UserNotFoundException("User not found with this ID"));
 
         Category cat = categoryRepository.findByNameIgnoreCase(expenseReqDto.getCategory())
                 .orElseGet(() -> {
@@ -163,6 +163,4 @@ public class ExpenseServiceImpl implements ExpenseService{
 
         return resDto;
     }
-
-
 }
